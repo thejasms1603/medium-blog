@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { decode,sign, verify } from 'hono/jwt'
+import bcrypt from "bcryptjs";
 
 const app = new Hono<{
   Bindings: {
@@ -12,23 +13,28 @@ const app = new Hono<{
   };
 }>();
 
-app.use('/api/v1/blog/*', async (c,next)=>{
-  //get the header and verify the header
-  // if it is correct then proceed if not forbidden 
-  const authHeader = c.req.header("authorization") || " ";
-  //Bearer Token = {"Bearer", "token"}
-  const token = authHeader.split(" ")[1];
-  const response = await verify(token, c.env.JWT_SECRET);
-  if(!response)
-  {
-    c.status(403)
-    return c.json({
-      error:"Unauthorized"
-    })
+app.use("/api/v1/blog/*", async (c, next) => {
+  try {
+    // Get the Authorization header
+    const authHeader = c.req.header("authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      c.status(403);
+      return c.json({ error: "Unauthorized" });
+    }
+    const token = authHeader.split(" ")[1];
+    const response = await verify(token, c.env.JWT_SECRET);
+    if (!response) {
+      c.status(403);
+      return c.json({ error: "Unauthorized" });
+    }
+    c.set("userId", response.id);
+    await next();
+  } catch (error) {
+    console.error("Error verifying token:", error.message);
+    c.status(403);
+    return c.json({ error: "Unauthorized" });
   }
-  c.set('userId', response.id)
-  await next();
-})
+});
 
 app.post('/api/v1/signup', async (c)=>{
   const prisma = new PrismaClient({
@@ -37,10 +43,12 @@ app.post('/api/v1/signup', async (c)=>{
 
   const body = await c.req.json();
   try {
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(body.password, saltRounds);
     const user = await prisma.user.create({
       data: {
         email: body.email,
-        password: body.password,
+        password:hashedPassword,
       },
     });
     const jwtToken = await sign({ id: user.id }, c.env.JWT_SECRET);
@@ -59,22 +67,39 @@ app.post('/api/v1/signin',async (c)=>{
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
-  const user = await prisma.user.findUnique({
-    where:{
-      email:body.email,
-      password:body.password
-    }
-  });
-
-  if(!user)
+  try
   {
-    c.status(403);
+    const user = await prisma.user.findUnique({
+      where:{
+        email:body.email,
+      }
+    });
+    
+    if(!user)
+      {
+        c.status(403);
+        return c.json({
+          error:"User not found"
+        })
+      }
+      const isPasswordValid = await bcrypt.compare(body.password, user.password);
+      if(!isPasswordValid)
+        {
+          c.status(403);
+          return c.json({
+            error:"Invalid email or password"
+          })
+        }
+        const jwt = await sign({id:user.id}, c.env.JWT_SECRET);
+        return c.json({jwt})
+  } catch(e)
+  {
+    console.error("Error occured", e.message);
+    c.status(500);
     return c.json({
-      error:"User not found"
+      error:"Error while signing in"
     })
   }
-  const jwt = await sign({id:user.id}, c.env.JWT_SECRET);
-  return c.json({jwt})
 })
 
 app.get("/api/v1/blog/:id", (c) => {
@@ -87,6 +112,10 @@ app.post('/api/v1/blog', (c)=>{
 
 app.put("/api/v1/blog", (c)=>{
   return c.text("Blog Update Route")
+})
+
+app.get('/api/v1/blog/bulk', (c)=>{
+  return c.text('Get All Blogs')
 })
 
 
