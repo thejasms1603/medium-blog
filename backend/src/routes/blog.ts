@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { decode, sign, verify } from "hono/jwt";
 import bcrypt from "bcryptjs";
-import { createBlogInput } from "@thejasgowda001/medium-common";
+import { createBlogInput, updateBlogInput } from "@thejasgowda001/medium-common";
 
 
 export const blogRouter = new Hono<{
@@ -81,7 +81,7 @@ blogRouter.post("/", async (c) => {
 
 blogRouter.put("/", async (c) => {
     const body = await c.req.json();
-    const { success } = createBlogInput.safeParse(body);
+    const { success } = updateBlogInput.safeParse(body);
     if (!success) {
       c.status(411);
       return c.json({
