@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { decode, sign, verify } from "hono/jwt";
 import bcrypt from "bcryptjs";
+import { createBlogInput } from "@thejasgowda001/medium-common";
+
 
 export const blogRouter = new Hono<{
     Bindings:{
@@ -43,10 +45,18 @@ blogRouter.use("/*", async (c, next) => {
 //above middleware extract the user id and pass it down to the route window
 // in Hono c is context which acts as both req and res
 blogRouter.post("/", async (c) => {
+  const body = await c.req.json();
+  const { success } = createBlogInput.safeParse(body);
+  if(!success)
+    {
+      c.status(411);
+      return c.json({
+        error:"Inputs are not correct"
+      })
+    }
     const prisma = new PrismaClient({
         datasourceUrl:c.env.DATABASE_URL,
     }).$extends(withAccelerate());
-    const body = await c.req.json();
     const authorId =  c.get("userId");
     try{
     const post = await prisma.post.create({
@@ -71,6 +81,13 @@ blogRouter.post("/", async (c) => {
 
 blogRouter.put("/", async (c) => {
     const body = await c.req.json();
+    const { success } = createBlogInput.safeParse(body);
+    if (!success) {
+      c.status(411);
+      return c.json({
+        error: "Inputs are not correct",
+      });
+    }
     const prisma = new PrismaClient({
         datasourceUrl:c.env.DATABASE_URL
     }).$extends(withAccelerate());
