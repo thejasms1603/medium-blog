@@ -34,8 +34,9 @@ userRouter.post("/signup", async (c) => {
     const hashedPassword = await bcrypt.hash(body.password, saltRounds);
     const user = await prisma.user.create({
       data: {
-        email: body.email,
+        email: body.username,
         password: hashedPassword,
+        name:body.name
       },
     });
     const jwtToken = await sign({ id: user.id }, c.env.JWT_SECRET);
@@ -65,7 +66,7 @@ userRouter.post("/signin", async (c) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
-        email: body.email,
+        email: body.username,
       },
     });
 
