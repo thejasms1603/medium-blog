@@ -1,33 +1,42 @@
+import { Link } from "react-router-dom";
+
 interface BlogCardProps {
   authorName: string;
   title: string;
   content: string;
   publishedDate: string;
+  id:number
 }
 const BlogCard = ({
-  authorName,
-  title,
-  content,
-  publishedDate,
+    id,
+    authorName,
+    title,
+    content,
+    publishedDate,
 }: BlogCardProps) => {
-  return (
-    <div className="flex flex-col justify-center items-center pt-20">
+  return <Link to={`/blog/${id}`} >
+  <div className='p-4 border-b border-slate-200 pb-4 w-screen max-w-screen-md cursor-pointer'>
       <div className='flex gap-2'>
-        <div className='flex justify-center flex-col'>
-          <Avatar name={authorName} />
+        <Avatar name={authorName}/>
+        <div className='font-extralight text-sm flex justify-center flex-col'>
+          {authorName}
         </div>
-        <div className='font-extralight'>{authorName}</div>
-        <div><Circle /></div>
-        <div className='font-thin text-slate-500'>{publishedDate}</div>
+        <div>
+          <Circle />
+        </div>
+        <div className='flex justify-center flex-col font-thin text-slate-500 text-sm'>
+          {publishedDate}
+        </div>
       </div>
-      <div className="font-semibold text-xl">{title}</div>
-      <div className="font-thin text-md">
+      <div className='font-semibold text-xl pt-2'>{title}</div>
+      <div className='font-thin text-md'>
         {content.length > 100 ? content.slice(0, 100) + "..." : content}
       </div>
-      <div>{`${Math.ceil(content.length / 100)} minutes`}</div>
-      <div className='bg-slate-200 h-1 w-full text-slate-400'></div>
+      <div className='text-slate-500 text-sm font-thin pt-2'>{`${Math.ceil(
+        content.length / 100
+      )} minute(s) read`}</div>
     </div>
-  );
+    </Link>
 };
 
 
@@ -35,10 +44,10 @@ function Circle(){
     return <div className='rounded-full h-1 w-1 text-slate-400'>&#x2022;</div>;
 }
 
-function Avatar({name}:{name:string})
+ export function Avatar({name, size = "small" }:{name:string, size?:"small" | "big"})
 {
-    return <div className='relative inline-flex items-center justify-center w-4 h-4 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600'>
-  <span className=' text-xs font-medium text-gray-600 dark:text-gray-300'>{name[0]}</span>
+    return <div className={`relative inline-flex items-center justify-center ${size === "small" ? "w-6 h-6" : "w-10 h-10"} overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600`}>
+  <span className={`${size === "small" ? "text-xs": "text-md" }font-medium text-gray-600 dark:text-gray-300`}>{name[0]}</span>
 </div>;
 
 }
