@@ -24,17 +24,6 @@ const Blogs = () => {
                 publishedDate={"28th Jan 2025"}
               />
             ))}
-
-            <BlogCard
-              authorName={"Anonymous"}
-              title={
-                "How an Ugly single page website makes $5000 a month without affiliate marketing"
-              }
-              content={
-                "How an Ugly single page website makes $5000 a month without affiliate marketing"
-              }
-              publishedDate={"28th Jan 2025"}
-            />
           </div>
         </div>
       </div>
