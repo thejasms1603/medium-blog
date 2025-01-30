@@ -20,10 +20,15 @@ function PublishButton({ title, content }: publish) {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("Bearer token");
+      const token = localStorage.getItem("token");
+      if(!token)
+      {
+        alert("Authentication Required, Please login");
+        navigate('/signin');
+      }
       const response = await axios.post(
         `${BACKEND_URL}/api/v1/blog`,
-        { title, content },
+        { title: title, content: content },
         {
           headers: {
             Authorization: `Bearer ${token}`,

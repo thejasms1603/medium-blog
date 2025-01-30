@@ -40,7 +40,7 @@ const BlogCard = ({
 };
 
 
-function Circle(){
+export function Circle(){
     return <div className='rounded-full h-1 w-1 text-slate-400'>&#x2022;</div>;
 }
 
